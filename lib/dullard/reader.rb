@@ -77,10 +77,11 @@ class Dullard::Workbook
     49 => '@',
   }
 
-  def initialize(file, user_defined_formats = {})
+  def initialize(file, user_defined_formats = {}, default_type = :float)
     @file = file
     @zipfs = Zip::File.open(@file)
     @user_defined_formats = user_defined_formats
+    @default_type = default_type
     read_styles
   end
 
@@ -149,7 +150,7 @@ class Dullard::Workbook
     elsif @user_defined_formats.has_key? format
       @user_defined_formats[format]
     else
-      :float
+      @default_type
     end
   end
 
