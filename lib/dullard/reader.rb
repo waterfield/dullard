@@ -37,6 +37,7 @@ class Dullard::Workbook
     '@' => :float,
     #-- zusaetzliche Formate, die nicht standardmaessig definiert sind:
     "yyyy\\-mm\\-dd" => :date,
+    "yyyy-mm-dd" => :date,
     'dd/mm/yy' => :date,
     'hh:mm:ss' => :time,
     "dd/mm/yy\\ hh:mm" => :datetime,
@@ -45,7 +46,7 @@ class Dullard::Workbook
     'mm/dd/yyyy' => :date,
   }
 
-  STANDARD_FORMATS = { 
+  STANDARD_FORMATS = {
     0 => 'General',
     1 => '0',
     2 => '0.00',
@@ -109,10 +110,10 @@ class Dullard::Workbook
 
   def read_styles
     doc = Nokogiri::XML(@zipfs.file.open("xl/styles.xml"))
-    
+
     @num_formats = {}
     @cell_xfs = []
-    
+
     doc.css('/styleSheet/numFmts/numFmt').each do |numFmt|
       numFmtId = numFmt.attributes['numFmtId'].value.to_i
       formatCode = numFmt.attributes['formatCode'].value
@@ -125,7 +126,7 @@ class Dullard::Workbook
     end
   end
 
-  
+
   # Code borrowed from Roo (https://github.com/hmcgowan/roo/blob/master/lib/roo/excelx.rb)
   # convert internal excelx attribute to a format
   def attribute2format(s)
@@ -176,7 +177,8 @@ class Dullard::Sheet
   end
 
   def rows
-    Enumerator.new(row_count) do |y|
+    # Enumerator.new(row_count) do |y|  # for Ruby 2.0
+    Enumerator.new do |y|
       next unless @file
       @file.rewind
       shared = false
@@ -195,6 +197,8 @@ class Dullard::Sheet
             if node.attributes['t'] != 's' && node.attributes['t'] != 'b'
               cell_format_index = node.attributes['s'].to_i
               cell_type = @workbook.format2type(@workbook.attribute2format(cell_format_index))
+            else
+              cell_type = nil # Added by Richard Matthews, 12/26/2014
             end
 
             rcolumn = node.attributes["r"]
@@ -230,7 +234,6 @@ class Dullard::Sheet
               # leave as string
           end
           cell_type = nil
-
           row << (shared ? string_lookup(value.to_i) : value)
         end
       end
