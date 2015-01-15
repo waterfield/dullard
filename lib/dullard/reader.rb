@@ -186,6 +186,7 @@ class Dullard::Sheet
       row = nil
       column = nil
       cell_type = nil
+      in_v = false
       Nokogiri::XML::Reader(@file).each do |node|
         case node.node_type
         when Nokogiri::XML::Reader::TYPE_ELEMENT
@@ -195,7 +196,9 @@ class Dullard::Sheet
             column = 0
             next
           when "c"
-            if node.attributes['t'] != 's' && node.attributes['t'] != 'b'
+            if node.attributes['t'] == 'str'
+              cell_type = :str
+            elsif node.attributes['t'] != 's' && node.attributes['t'] != 'b'
               cell_format_index = node.attributes['s'].to_i
               cell_type = @workbook.format2type(@workbook.attribute2format(cell_format_index))
             else
@@ -213,16 +216,20 @@ class Dullard::Sheet
             shared = (node.attribute("t") == "s")
             column += 1
             next
+          when "v"
+            in_v = true
           end
         when Nokogiri::XML::Reader::TYPE_END_ELEMENT
           if node.name == "row"
             y << row
             next
+          elsif node.name == "v"
+            in_v = false
           end
         end
         value = node.value
 
-        if value
+        if value && in_v
           case cell_type
             when :datetime
             when :time
