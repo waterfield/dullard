@@ -187,6 +187,7 @@ class Dullard::Sheet
       column = nil
       cell_type = nil
       in_v = false
+      needs_val = false
       Nokogiri::XML::Reader(@file).each do |node|
         case node.node_type
         when Nokogiri::XML::Reader::TYPE_ELEMENT
@@ -194,8 +195,14 @@ class Dullard::Sheet
           when "row"
             row = []
             column = 0
+            in_v = false
+            needs_val = false
             next
           when "c"
+            if needs_val
+              row << nil
+            end
+            needs_val = true
             if node.attributes['t'] == 'str'
               cell_type = :str
             elsif node.attributes['t'] != 's' && node.attributes['t'] != 'b'
@@ -243,6 +250,7 @@ class Dullard::Sheet
           end
           cell_type = nil
           row << (shared ? string_lookup(value.to_i) : value)
+          needs_val = false
         end
       end
     end
