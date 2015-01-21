@@ -241,6 +241,7 @@ class Dullard::Sheet
             when :datetime
             when :time
             when :date
+              value = value.to_f + 1 if value.to_f <= 60 # compensate for Microsoft's incorrect leap year calculation: see http://support.microsoft.com/kb/214326
               value = (DateTime.new(1899,12,30) + value.to_f)
             when :percentage # ? TODO
             when :float
